@@ -234,7 +234,7 @@ def _post_process(mask: np.ndarray) -> np.ndarray:
 def stitch_mask_tiles(
         mask_tiles: Sequence[np.ndarray],
         boxes: Sequence[Tuple[int, int, int, int]],
-        out_shape: Tuple[int, int],
+        out_shape: Union[Tuple[int, int], Tuple[int, ...]],
         window_kind: str = "hann"
 ) -> np.ndarray:
     """

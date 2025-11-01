@@ -1,23 +1,12 @@
 """
 Server for patch inference.
 """
-import sys
-
 from PIL import Image
 import numpy as np
+import yaml
 
 from networking.scatter_gather import run_server
 from sessions import Session
-
-
-def usage(err: int = 1) -> None:
-    """
-    Print a usage message and exit the program.
-    :param err: The error number.
-    :return: None, exits.
-    """
-    print("Usage: python patch_server.py <server_port>", file=sys.stderr)
-    exit(err)
 
 
 def main(server_port):
@@ -37,10 +26,7 @@ def main(server_port):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        usage(1)
-    try:
-        port = int(sys.argv[1])
-        main(port)
-    except ValueError:
-        usage(2)
+    with open('config.yml', 'r') as f:
+        config = yaml.safe_load(f)
+    server_port = config['patch_server_port'][0]
+    main(int(server_port))
