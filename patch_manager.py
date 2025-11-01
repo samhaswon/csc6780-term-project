@@ -15,12 +15,15 @@ from sessions import Session, BiRefNetSession
 from tile_proc.tiles import select_tiles_edge_mixture, extract_rgb_tiles, stitch_mask_tiles
 
 
+# The session to do the base inference on the input image
 base_session: Optional[Union[Session, BiRefNetSession]] = None
+
+# The addresses (IP, port) of patch servers
 server_addresses: Iterator[Tuple[str, int]]
 
 
 async def main():
-    test_image = Image.open("/home/samuel/da/skindataset/images/01097.png")
+    test_image = Image.open("/home/samuel/da/skindataset/images/01135.png")
     if test_image.mode != "RGB":
         test_image = test_image.convert("RGB")
     test_image_np = np.array(test_image)
@@ -51,8 +54,8 @@ if __name__ == '__main__':
     server_addr_tmp = [parse_server_addr(x) for x in server_addr_conf]
     server_addresses = cycle(server_addr_tmp)
 
+    # Parse the model name and make the session for this manager instance
     session_model_name = config.get("base_session", ["u2net"])[0]
-
     if session_model_name == 'u2net':
         base_session = Session(model_path="models/u2net.onnx")
     elif session_model_name == 'u2netp':

@@ -23,6 +23,13 @@ LEN_PREFIX_FMT = "!Q"  # 8-byte unsigned big-endian length prefix
 LEN_PREFIX_SIZE = struct.calcsize(LEN_PREFIX_FMT)
 
 
+###############################################################################
+#                                                                             #
+#                             Client/Helper Code                              #
+#                                                                             #
+###############################################################################
+
+
 def _ensure_rgba_numpy(image: Union[np.ndarray, "PILImage.Image"]) -> np.ndarray:
     """
     Convert input to a numpy RGBA array of shape (512, 512, 4), dtype=uint8.
