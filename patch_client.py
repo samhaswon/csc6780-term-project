@@ -4,7 +4,7 @@ Client of the patch manager.
 from itertools import cycle
 import socket
 import struct
-from typing import Optional, Union, Tuple, Iterator
+from typing import Union, Tuple, Iterator
 
 import cv2
 import numpy as np
@@ -108,12 +108,15 @@ if __name__ == '__main__':
     server_addr_tmp = [parse_server_addr(x) for x in server_addr_conf]
     server_addresses = cycle(server_addr_tmp)
 
+    # Load test image
     test_image = Image.open("/home/samuel/da/skindataset/images/01135.png")
     if test_image.mode != "RGB":
         test_image = test_image.convert("RGB")
     test_image_np = np.array(test_image)
 
+    # Run inference on the test image
     result_alpha = segment_image(test_image_np, next(server_addresses))
 
+    # Write out the result
     result = np.dstack((cv2.cvtColor(test_image_np, cv2.COLOR_RGB2BGR), result_alpha))
     cv2.imwrite("test.png", result)
