@@ -57,7 +57,7 @@ def _ensure_rgba_numpy(image: Union[np.ndarray, "PILImage.Image"]) -> np.ndarray
     return arr
 
 
-def _serialize_ndarray(arr: np.ndarray) -> bytes:
+def serialize_ndarray(arr: np.ndarray) -> bytes:
     """
     Serialize a numpy array to .npy bytes without using pickle.
 
@@ -70,7 +70,7 @@ def _serialize_ndarray(arr: np.ndarray) -> bytes:
     return buf.getvalue()
 
 
-def _deserialize_ndarray(data: bytes) -> np.ndarray:
+def deserialize_ndarray(data: bytes) -> np.ndarray:
     """
     Deserialize .npy bytes to a numpy array with allow_pickle disabled.
 
@@ -170,11 +170,11 @@ async def request_patch(
     :raises ValueError: on invalid input or protocol violations
     """
     arr = _ensure_rgba_numpy(image)
-    req_bytes = _serialize_ndarray(arr)
+    req_bytes = serialize_ndarray(arr)
     host, port = parse_server_addr(server_addr)
 
     resp_bytes = await _async_send_and_receive(host, port, req_bytes)
-    out_arr = _deserialize_ndarray(resp_bytes)
+    out_arr = deserialize_ndarray(resp_bytes)
 
     if not isinstance(out_arr, np.ndarray) or out_arr.shape != (512, 512):
         raise ValueError("Server returned unexpected array shape.")
@@ -187,7 +187,7 @@ async def request_patch(
 ###############################################################################
 
 
-def _recv_exact(sock: socket.socket, n: int) -> bytes:
+def recv_exact(sock: socket.socket, n: int) -> bytes:
     """
     Receive exactly n bytes from a blocking socket.
 
@@ -221,12 +221,12 @@ def _handle_one_request(conn: socket.socket, handle_func: Optional[Callable[[np.
     if handle_func is None:
         handle_func = lambda x: x[..., 3]
     # Read request header and body
-    hdr = _recv_exact(conn, LEN_PREFIX_SIZE)
+    hdr = recv_exact(conn, LEN_PREFIX_SIZE)
     (req_len,) = struct.unpack(LEN_PREFIX_FMT, hdr)
-    data = _recv_exact(conn, req_len)
+    data = recv_exact(conn, req_len)
 
     # Deserialize safely
-    arr = _deserialize_ndarray(data)
+    arr = deserialize_ndarray(data)
 
     # Validate and compute result
     if not isinstance(arr, np.ndarray) or arr.shape != (512, 512, 4):
@@ -237,7 +237,7 @@ def _handle_one_request(conn: socket.socket, handle_func: Optional[Callable[[np.
         raise ValueError("Unexpected result shape after channel extraction.")
 
     # Serialize and send response
-    out_bytes = _serialize_ndarray(result)
+    out_bytes = serialize_ndarray(result)
     conn.sendall(struct.pack(LEN_PREFIX_FMT, len(out_bytes)))
     conn.sendall(out_bytes)
 

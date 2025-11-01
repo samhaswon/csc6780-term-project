@@ -3,5 +3,10 @@ base_session:
 patch_servers:
   - "0.0.0.0:5432"
   - "0.0.0.0:5432"
+manager_servers:
+  - "0.0.0.0:5433"
+  - "0.0.0.0:5433"
 patch_server_port:
   - "5432"
+manager_server_port:
+  - "5433"
