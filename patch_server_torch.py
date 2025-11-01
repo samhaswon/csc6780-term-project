@@ -6,11 +6,11 @@ import numpy as np
 import yaml
 
 from networking.scatter_gather import run_server
-from sessions import TorchSession
+from sessions import PatchTorchSession
 
 
 def main(server_port):
-    patch_session = TorchSession("./models/checkpoint.pth_38.tar")
+    patch_session = PatchTorchSession("./models/checkpoint.pth_38.tar")
 
     def patch_process(x: np.ndarray, *_) -> np.ndarray:
         """

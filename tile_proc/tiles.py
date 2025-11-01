@@ -10,7 +10,7 @@ import numpy as np
 from PIL import Image
 from PIL.Image import Image as PILImage  # For typing
 
-from sessions import Session, BiRefNetSession, TorchSession
+from sessions import Session, BiRefNetSession, PatchTorchSession
 
 # These are global variables here because they may need to be changed,
 # but they realistically won't be.
@@ -327,8 +327,8 @@ def refine_tiles_and_stitch(
 
 def segment_image(
         image: PILImage,
-        base_session: Union[Session, BiRefNetSession, TorchSession],
-        chunk_session: Union[Session, BiRefNetSession, TorchSession, Any],
+        base_session: Union[Session, BiRefNetSession, PatchTorchSession],
+        chunk_session: Union[Session, BiRefNetSession, PatchTorchSession, Any],
         log_time: bool = True,
 ) -> np.ndarray:
     base_start = time.perf_counter()

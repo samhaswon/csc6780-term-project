@@ -12,7 +12,7 @@ DEVICE = 'cuda'
 IOU_AT = 0.5
 
 
-class TorchSession:
+class PatchTorchSession:
     """
     Session for Torch inference with post-processing for the refiner U2NetP model
     """
