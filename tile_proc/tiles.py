@@ -55,20 +55,20 @@ def _gen_idxs(length: int, window: int, overlap: int, jitter: int) -> List[int]:
     return idxs
 
 
-def _select_tiles_edge_mixture(
+def select_tiles_edge_mixture(
     mask_gray: np.ndarray,
-    tile_size: int,
-    overlap: int,
-    min_pos_frac: float,
-    require_negative_overlap: bool,
-    min_neg_frac: float,
-    edge_band_px: int,
-    edge_target_frac: float,
-    pos_pure_frac: float,
-    neg_pure_frac: float,
-    bin_thresh: int,
-    jitter_px: int,
-    rng_seed: Optional[int],
+    tile_size: int = TILE_SIZE,
+    overlap: int = OVERLAP,
+    min_pos_frac: float = MIN_POS_FRAC,
+    require_negative_overlap: bool = REQUIRE_NEGATIVE_OVERLAP,
+    min_neg_frac: float = MIN_NEG_FRAC,
+    edge_band_px: int = EDGE_BAND_PX,
+    edge_target_frac: float = EDGE_TARGET_FRAC,
+    pos_pure_frac: float = POS_PURE_FRAC,
+    neg_pure_frac: float = NEG_PURE_FRAC,
+    bin_thresh: int = BIN_THRESH,
+    jitter_px: int = JITTER_PX,
+    rng_seed: Optional[int] = RNG_SEED,
 ) -> List[Tuple[int, int, int, int]]:
     """
     Select mostly edge tiles, plus a controlled sample of all-white and all-zero tiles.
@@ -338,7 +338,7 @@ def segment_image(
 
     # Make boxes
     boxed_start = time.perf_counter()
-    test_img_boxes = _select_tiles_edge_mixture(
+    test_img_boxes = select_tiles_edge_mixture(
         base_alpha,
         tile_size=TILE_SIZE,
         overlap=OVERLAP,
