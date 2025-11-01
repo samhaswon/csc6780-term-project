@@ -1,16 +1,16 @@
 """
-Server for patch inference.
+Server for patch inference using PyTorch.
 """
 from PIL import Image
 import numpy as np
 import yaml
 
 from networking.scatter_gather import run_server
-from sessions import Session
+from sessions import TorchSession
 
 
 def main(server_port):
-    patch_session = Session("./models/chunks.onnx")
+    patch_session = TorchSession("./models/checkpoint.pth_38.tar")
 
     def patch_process(x: np.ndarray, *_) -> np.ndarray:
         """
