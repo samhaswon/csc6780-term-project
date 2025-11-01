@@ -1,0 +1,62 @@
+FROM python:3.12-slim-bookworm
+
+ENV PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /tmp
+
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        binutils \
+        wget \
+        zstd \
+        xz-utils \
+        ocl-icd-libopencl1 \
+        libgl1 \
+        libglib2.0-0 \
+        libsm6 \
+        libxext6 \
+        libxrender1 \
+        ffmpeg; \
+    mkdir neo; \
+    cd neo; \
+    wget https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.16510.2/intel-igc-core_1.0.16510.2_amd64.deb; \
+    wget https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.16510.2/intel-igc-opencl_1.0.16510.2_amd64.deb; \
+    wget https://github.com/intel/compute-runtime/releases/download/24.13.29138.7/intel-level-zero-gpu-dbgsym_1.3.29138.7_amd64.ddeb; \
+    wget https://github.com/intel/compute-runtime/releases/download/24.13.29138.7/intel-level-zero-gpu_1.3.29138.7_amd64.deb; \
+    wget https://github.com/intel/compute-runtime/releases/download/24.13.29138.7/intel-opencl-icd-dbgsym_24.13.29138.7_amd64.ddeb; \
+    wget https://github.com/intel/compute-runtime/releases/download/24.13.29138.7/intel-opencl-icd_24.13.29138.7_amd64.deb; \
+    wget https://github.com/intel/compute-runtime/releases/download/24.13.29138.7/libigdgmm12_22.3.18_amd64.deb; \
+    mkdir deb_repack; \
+    cp ./libigdgmm12_22.3.18_amd64.deb ./deb_repack/libigdgmm12_22.3.18_amd64.deb; \
+    cd deb_repack; \
+    ar x libigdgmm12_22.3.18_amd64.deb; \
+    zstd -d < control.tar.zst | xz > control.tar.xz; \
+    zstd -d < data.tar.zst | xz > data.tar.xz; \
+    ar -m -c -a sdsd libigdgmm12_22.3.18_amd64_repacked.deb debian-binary control.tar.xz data.tar.xz; \
+    cp libigdgmm12_22.3.18_amd64_repacked.deb ../libigdgmm12_22.3.18_amd64.deb; \
+    cd ..; \
+    rm -rf ./deb_repack/; \
+    dpkg -i *.deb; \
+    apt-get remove --purge -y binutils wget zstd xz-utils; \
+    apt-get autoremove -y; \
+    apt-get clean; \
+    cd /tmp; \
+    rm -rf neo; \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+RUN pip install --no-cache-dir \
+    pillow~=12.0.0 \
+    numpy~=2.2.6 \
+    onnxruntime~=1.23.2 \
+    opencv-python~=4.12.0.88 \
+    pyyaml~=6.0.3
+
+COPY . .
+
+EXPOSE 5432
+
+CMD ["python", "patch_server.py"]

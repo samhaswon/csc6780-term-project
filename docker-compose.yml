@@ -1,0 +1,26 @@
+services:
+  patch_server:
+    build:
+      context: .
+      dockerfile: Dockerfile.patch_server
+    image: patch-server:latest
+    volumes:
+      - ./models:/app/models:ro
+      - ./config.docker.yml:/app/config.yml:ro
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  patch_manager:
+    build:
+      context: .
+      dockerfile: Dockerfile.patch_manager
+    image: patch-manager:latest
+    depends_on:
+      - patch_server
+    volumes:
+      - ./models:/app/models:ro
+      - ./config.docker.yml:/app/config.yml:ro
+    ports:
+      - "5433:5433"
+    restart: unless-stopped

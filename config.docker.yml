@@ -1,0 +1,10 @@
+base_session:
+  - "u2net"
+patch_servers:
+  - "patch_server:5432"
+manager_servers:
+  - "patch_manager:5433"
+patch_server_port:
+  - "5432"
+manager_server_port:
+  - "5433"
