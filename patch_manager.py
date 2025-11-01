@@ -56,7 +56,7 @@ if __name__ == '__main__':
     if session_model_name == 'u2net':
         base_session = Session(model_path="models/u2net.onnx")
     elif session_model_name == 'u2netp':
-        base_session = Session(model_path="models/u2net.onnx")
+        base_session = Session(model_path="models/u2netp.onnx")
     elif session_model_name == 'birefnet':
         base_session = BiRefNetSession(model_path="models/birefnet.onnx")
     else:
