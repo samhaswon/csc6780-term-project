@@ -23,23 +23,32 @@ server_addresses: Iterator[Tuple[str, int]]
 
 
 async def main():
+    # Load test image
     test_image = Image.open("/home/samuel/da/skindataset/images/01135.png")
     if test_image.mode != "RGB":
         test_image = test_image.convert("RGB")
     test_image_np = np.array(test_image)
+
+    # Do the base prediction
     base_alpha = base_session.predict(test_image)
 
+    # Generate boxes
     boxes = select_tiles_edge_mixture(base_alpha)
+    # Make tiles from the boxes
     tiles = extract_rgb_tiles(np.dstack((test_image_np, base_alpha)), boxes)
 
-    mask_tiles_scatter = [request_patch(tile, next(server_addresses)) for tile in tiles]
-    mask_tiles = [await tile for tile in mask_tiles_scatter]
+    # Scatter and gather tiles to and from patch inference server(s)
+    mask_tiles = await asyncio.gather(
+        *(request_patch(tile, next(server_addresses)) for tile in tiles)
+    )
+    # Put the tiles together to make the result mask
     stitched = stitch_mask_tiles(
         mask_tiles,
         boxes,
         out_shape=test_image_np.shape[:2],
         window_kind="hann"
     )
+    # Save result image
     result = np.dstack((cv2.cvtColor(test_image_np, cv2.COLOR_RGB2BGR), stitched))
     cv2.imwrite("test.png", result)
 
