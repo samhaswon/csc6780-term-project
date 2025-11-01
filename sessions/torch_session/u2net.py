@@ -1,3 +1,7 @@
+"""
+Definition of the U2Net model, source:
+https://github.com/xuebinqin/U-2-Net
+"""
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
