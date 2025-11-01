@@ -14,7 +14,7 @@ import numpy as np
 
 try:
     from PIL import Image as PILImage  # Optional dependency for client input
-except ImportError:  # Pillow may be absent on the server
+except ImportError:  # Pillow may be absent on the server as it is only needed for some paths.
     PILImage = None
     print("PIL not found!", file=sys.stderr)
 
