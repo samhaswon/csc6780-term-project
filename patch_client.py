@@ -109,7 +109,7 @@ if __name__ == '__main__':
     server_addresses = cycle(server_addr_tmp)
 
     # Load test image
-    test_image = Image.open("/home/samuel/da/skindataset/images/01135.png")
+    test_image = Image.open("test_inputs/test.jpg")
     if test_image.mode != "RGB":
         test_image = test_image.convert("RGB")
     test_image_np = np.array(test_image)
