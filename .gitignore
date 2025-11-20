@@ -209,3 +209,7 @@ __marimo__/
 # IDE folders
 .idea/
 .vscode/
+
+# Local output files
+test.png
+test_boxed.jpg
