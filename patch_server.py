@@ -10,7 +10,7 @@ from sessions import Session
 
 
 def main(server_port):
-    patch_session = Session("./models/chunks.onnx")
+    patch_session = Session("./models/u2netp_chunks.onnx")
 
     def patch_process(x: np.ndarray, *_) -> np.ndarray:
         """

@@ -10,7 +10,7 @@ from sessions import PatchTorchSession
 
 
 def main(server_port):
-    patch_session = PatchTorchSession("./models/checkpoint.pth_38.tar")
+    patch_session = PatchTorchSession("./models/u2netp_chunks.pth")
 
     def patch_process(x: np.ndarray, *_) -> np.ndarray:
         """

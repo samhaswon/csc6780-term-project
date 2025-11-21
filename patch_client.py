@@ -55,16 +55,17 @@ def _send_and_receive_sync(
     port: int,
     payload: bytes,
     *,
-    timeout: float = 30.0,
+    timeout: float = 120.0,
 ) -> bytes:
     """
     Blocking TCP exchange, length-prefixed request and response.
 
-    :param host: server hostname or IP
-    :param port: server port
-    :param payload: request payload bytes
-    :param timeout: socket timeout in seconds
-    :returns: response payload bytes
+    :param host: Server hostname or IP.
+    :param port: Server port.
+    :param payload: Request payload bytes.
+    :param timeout: Socket timeout in seconds.
+    This should be at least 60s for JIT compile time on the first run.
+    :returns: Response payload bytes.
     """
     with socket.create_connection((host, port), timeout=timeout) as sock:
         sock.settimeout(timeout)

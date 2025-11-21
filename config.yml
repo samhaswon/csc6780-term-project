@@ -1,5 +1,5 @@
 base_session:
-  - "u2net"
+  - "u2netp"
 patch_servers:
   - "0.0.0.0:5432"
   - "0.0.0.0:5432"

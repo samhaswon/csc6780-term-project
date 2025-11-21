@@ -9,7 +9,6 @@ from .u2net import U2NETP
 
 
 DEVICE = 'cuda'
-IOU_AT = 0.5
 
 
 class PatchTorchSession:
@@ -22,7 +21,7 @@ class PatchTorchSession:
         self.input_size = input_size if input_size is not None else [512, 512]
         if torch.cuda.is_available() and DEVICE == "cuda":
             self.net.load_state_dict(
-                torch.load(model_path, weights_only=False)["state"]["state_dict"]
+                torch.load(model_path, weights_only=False)
             )
             self.net.cuda()
         else:
@@ -31,9 +30,10 @@ class PatchTorchSession:
                     model_path,
                     map_location=torch.device(DEVICE),
                     weights_only=False
-                )["state"]["state_dict"]
+                )
             )
         self.net.eval()
+        self.net = torch.compile(self.net)
         self.half_precision = False
 
     @staticmethod

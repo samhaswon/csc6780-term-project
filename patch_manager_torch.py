@@ -20,12 +20,12 @@ from networking.scatter_gather import (
     deserialize_ndarray,
     recv_exact,
 )
-from sessions import Session, BiRefNetSession
+from sessions import BiRefNetTorchSession, U2NetTorchSession
 from tile_proc.tiles import select_tiles_edge_mixture, extract_rgb_tiles, stitch_mask_tiles
 
 
 # The session to do the base inference on the input image
-base_session: Optional[Union[Session, BiRefNetSession]] = None
+base_session: Optional[Union[BiRefNetTorchSession, U2NetTorchSession]] = None
 
 # The addresses (IP, port) of patch servers
 server_addresses: Iterator[Tuple[str, int]]
@@ -35,14 +35,6 @@ MANAGER_PORT: int
 # Struct stuff
 LEN_PREFIX_FMT = "!Q"
 LEN_PREFIX_SIZE = struct.calcsize(LEN_PREFIX_FMT)
-
-
-def _ensure_rgb_uint8(arr: np.ndarray) -> np.ndarray:
-    if arr.ndim != 3 or arr.shape[2] != 3:
-        raise ValueError("Expected (H, W, 3) array.")
-    if arr.dtype != np.uint8:
-        return arr.astype(np.uint8, copy=False)
-    return arr
 
 
 async def main():
@@ -66,7 +58,7 @@ async def main():
                     raise ValueError("Input must be an RGB array (H, W, 3).")
 
                 # Do the base prediction
-                base_alpha = base_session.predict(Image.fromarray(arr))
+                base_alpha = base_session.remove(Image.fromarray(arr), mask_only=True)
 
                 # Generate boxes
                 boxes = select_tiles_edge_mixture(base_alpha)
@@ -113,11 +105,11 @@ if __name__ == '__main__':
     # Parse the model name and make the session for this manager instance
     session_model_name = config.get("base_session", ["u2net"])[0]
     if session_model_name == 'u2net':
-        base_session = Session(model_path="models/u2net.onnx")
+        base_session = U2NetTorchSession(use_small=False)
     elif session_model_name == 'u2netp':
-        base_session = Session(model_path="models/u2netp.onnx")
+        base_session = U2NetTorchSession(use_small=True)
     elif session_model_name == 'birefnet':
-        base_session = BiRefNetSession(model_path="models/birefnet.onnx")
+        base_session = BiRefNetTorchSession(net_path="models/birefnet.pth")
     else:
         raise ValueError(f"Unknown session: {session_model_name}")
 

@@ -39,6 +39,6 @@ if __name__ == '__main__':
     boxes = select_tiles_edge_mixture(base_alpha)
     boxed = draw_boxes(image_np, boxes, box_line_thickness=4)
 
-    cv2.imwrite("test_boxed.jpg", boxed)
+    cv2.imwrite("test_boxed.jpg", boxed, [cv2.IMWRITE_JPEG_QUALITY, 75])
     print(f"Number of boxes: {len(boxes)}")
 
