@@ -13,7 +13,6 @@ import torch.nn.functional as F
 from .models.birefnet import BiRefNet
 
 
-DEVICE = 'cuda'
 # Default BiRefNet size
 IMAGE_SIZE = 1728
 
@@ -74,12 +73,16 @@ class BiRefNetTorchSession:
     Session for Torch inference of BiRefNet with post-processing.
     """
 
-    def __init__(self, net_path: str = "models/birefnet.pth", half_precision: bool = False):
+    def __init__(self, net_path: str = "models/birefnet.pth", half_precision: bool = False, device: str = None) -> None:
         checkpoint = torch.load(net_path, map_location='cpu', weights_only=False)
         net = BiRefNet(bb_pretrained=False)
         net.load_state_dict(checkpoint)
+        if device is not None:
+            self.device = device
+        else:
+            self.device = "cpu"
 
-        self.net = net
+        self.net = BiRefNetHFAdapter(net).to(self.device)
         self.net.eval()
         self.half_precision = half_precision
 
@@ -101,11 +104,11 @@ class BiRefNetTorchSession:
             size = IMAGE_SIZE, IMAGE_SIZE
         image_tensor = torch.tensor(np.array(img), dtype=torch.float32).permute(2, 0, 1) / 255.0
         image_tensor, pad_h, pad_w = resize_and_pad_square(image_tensor, size[0])
-        image_tensor = image_tensor.to(DEVICE)
+        image_tensor = image_tensor.to(self.device)
         image_tensor = image_tensor.unsqueeze(0)
         with (torch.inference_mode(),
               torch.autocast(
-                  device_type=DEVICE,
+                  device_type=self.device,
                   dtype=torch.float16,
                   enabled=self.half_precision)
               ):

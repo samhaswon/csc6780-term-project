@@ -8,18 +8,19 @@ import torch.nn.functional as F
 from .u2net import U2NETP
 
 
-DEVICE = 'cuda'
-
-
 class PatchTorchSession:
     """
     Session for Torch inference with post-processing for the refiner U2NetP model
     """
 
-    def __init__(self, model_path: str, input_size: Optional[Tuple[int, int]] = None) -> None:
+    def __init__(self, model_path: str, input_size: Optional[Tuple[int, int]] = None, device: str = None) -> None:
         self.net = U2NETP(4, 1)
         self.input_size = input_size if input_size is not None else [512, 512]
-        if torch.cuda.is_available() and DEVICE == "cuda":
+        if device is not None:
+            self.device = device
+        else:
+            self.device = "cpu"
+        if torch.cuda.is_available() and self.device == "cuda":
             self.net.load_state_dict(
                 torch.load(model_path, weights_only=False)
             )
@@ -28,7 +29,7 @@ class PatchTorchSession:
             self.net.load_state_dict(
                 torch.load(
                     model_path,
-                    map_location=torch.device(DEVICE),
+                    map_location=torch.device(self.device),
                     weights_only=False
                 )
             )
@@ -65,10 +66,10 @@ class PatchTorchSession:
         image_tensor = F.interpolate(
             torch.unsqueeze(image_tensor, 0), self.input_size, mode="bilinear").type(torch.float32)
         image_tensor = torch.divide(image_tensor, torch.max(image_tensor)).type(torch.float32)
-        image_tensor = image_tensor.to(DEVICE)
+        image_tensor = image_tensor.to(self.device)
         with (torch.no_grad(),
               torch.autocast(
-                  device_type=DEVICE,
+                  device_type=self.device,
                   dtype=torch.float16,
                   enabled=self.half_precision)
               ):

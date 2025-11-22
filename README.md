@@ -10,8 +10,8 @@ Some of the models used in this project are too large to commit to GitHub, so th
 First copy/clone the code into your folder on the HPC cluster. 
 This should be the following if you are Dr. Rogers.
 Otherwise, replace his username with your own.
-```
-/work/projects/csc6780-2025f-inference/mrogers/
+```bash
+cd /work/projects/csc6780-2025f-inference/mrogers/
 ```
 
 Then change directory into the project.

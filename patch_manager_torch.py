@@ -104,6 +104,7 @@ if __name__ == '__main__':
 
     # Parse the model name and make the session for this manager instance
     session_model_name = config.get("base_session", ["u2net"])[0]
+    manager_device = config.get("manager_server_device", ["cpu"])[0]
     if session_model_name == 'u2net':
         base_session = U2NetTorchSession(use_small=False)
     elif session_model_name == 'u2netp':

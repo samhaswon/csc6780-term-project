@@ -9,8 +9,8 @@ from networking.scatter_gather import run_server
 from sessions import PatchTorchSession
 
 
-def main(server_port):
-    patch_session = PatchTorchSession("./models/u2netp_chunks.pth")
+def main(server_port: int, server_device: str):
+    patch_session = PatchTorchSession("./models/u2netp_chunks.pth", device=server_device)
 
     def patch_process(x: np.ndarray, *_) -> np.ndarray:
         """
@@ -29,4 +29,5 @@ if __name__ == '__main__':
     with open('config.yml', 'r') as f:
         config = yaml.safe_load(f)
     s_port = config['patch_server_port'][0]
-    main(int(s_port))
+    s_device = config.get('patch_server_device', ["cpu"])[0]
+    main(int(s_port), s_device)
