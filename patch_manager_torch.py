@@ -112,11 +112,11 @@ if __name__ == '__main__':
     session_model_name = config.get("base_session", ["u2net"])[0]
     manager_device = config.get("manager_server_device", ["cpu"])[0]
     if session_model_name == 'u2net':
-        base_session = U2NetTorchSession(use_small=False)
+        base_session = U2NetTorchSession(use_small=False, device=manager_device)
     elif session_model_name == 'u2netp':
-        base_session = U2NetTorchSession(use_small=True)
+        base_session = U2NetTorchSession(use_small=True, device=manager_device)
     elif session_model_name == 'birefnet':
-        base_session = BiRefNetTorchSession(net_path="models/birefnet.pth")
+        base_session = BiRefNetTorchSession(net_path="models/birefnet.pth", device=manager_device)
     else:
         raise ValueError(f"Unknown session: {session_model_name}")
 

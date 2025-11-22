@@ -213,7 +213,7 @@ MANAGER_JOBID=$(sbatch --export=ALL,RUN_ROOT="$RUN_ROOT",RUN_DIR="$RUN_DIR" \
     "${RUN_DIR}/manager.sbatch" | awk '{print $4}')
 
 # Wait a little bit for all of the servers to start
-sleep 15
+sleep 20
 CLIENT_JOBID=$(sbatch --export=ALL,RUN_ROOT="$RUN_ROOT",RUN_DIR="$RUN_DIR" \
     "${RUN_DIR}/client.sbatch" | awk '{print $4}')
 
@@ -236,10 +236,6 @@ while true; do
     fi
     sleep 10
 done
-
-echo "Client job ${CLIENT_JOBID} finished (or left the queue)."
-
-echo "Client job ${CLIENT_JOBID} finished."
 
 ###############################################################################
 # 6. Kill manager and workers
