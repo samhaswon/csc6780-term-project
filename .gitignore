@@ -213,3 +213,6 @@ __marimo__/
 # Local output files
 test.png
 test_boxed.jpg
+
+# Job scripts (distinct from other scripts)
+*.sbatch
