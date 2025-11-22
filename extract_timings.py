@@ -36,51 +36,48 @@ def extract_run_dir_from_log(log_path: str) -> Optional[str]:
     return None
 
 
-def parse_config_for_model_and_nodes(config_path: str) -> Tuple[Optional[str], Optional[int]]:
+def parse_run_pipeline_for_model_and_nodes(
+    pipeline_path: str,
+) -> Tuple[Optional[str], Optional[int]]:
     """
-    Parse base_session model and number of nodes from config.yml, using regex.
+    Parse base_session model and number of nodes from run_pipeline.sh.
 
-    Looks for:
-      base_session:
-        - "MODEL_NAME"
+    Looks for something like:
+        #SBATCH --nodes=4              # Set the number of worker nodes for this run
 
     And:
-      patch_servers:
-        - "nodeA:5432"
-        - "nodeB:5432"
+        echo 'base_session:'
+        echo '  - "birefnet"'          # u2net, u2netp, or birefnet
 
-    :param config_path: Path to config.yml file.
+    :param pipeline_path: Path to run_pipeline.sh file.
     :returns: (base_session_model, num_nodes) or (None, None) on failure.
     """
-    if not os.path.exists(config_path):
+    if not os.path.exists(pipeline_path):
         return None, None
 
-    with open(config_path, "r", encoding="utf-8", errors="ignore") as cfg:
-        text = cfg.read()
+    with open(pipeline_path, "r", encoding="utf-8", errors="ignore") as f:
+        text = f.read()
 
-    # base_session: first list entry
-    base_session = None
-    base_match = re.search(
-        r"base_session:\s*\n\s*-\s*['\"]([^'\"]+)['\"]",
+    # Number of nodes: look for #SBATCH --nodes=<N>
+    nodes = None
+    nodes_match = re.search(r"#SBATCH\s+--nodes=(\d+)", text)
+    if nodes_match:
+        try:
+            nodes = int(nodes_match.group(1))
+        except ValueError:
+            nodes = None
+
+    # base_session model: look for echo 'base_session:' then the next echo with the model
+    model = None
+    model_match = re.search(
+        r"echo 'base_session:'\s*\n\s*echo '  - \"([^\"]+)\"'",
         text,
         flags=re.MULTILINE,
     )
-    if base_match:
-        base_session = base_match.group(1)
+    if model_match:
+        model = model_match.group(1)
 
-    # patch_servers: count the list entries
-    num_nodes = None
-    patch_section_match = re.search(
-        r"patch_servers:\s*((?:\n\s*-\s*['\"][^'\"]+['\"])+)",
-        text,
-        flags=re.MULTILINE,
-    )
-    if patch_section_match:
-        block = patch_section_match.group(1)
-        # each list entry starts with "-"
-        num_nodes = len(re.findall(r"\n\s*-\s*['\"][^'\"]+['\"]", block))
-
-    return base_session, num_nodes
+    return model, nodes
 
 
 def parse_timings_from_log(log_path: str) -> List[Tuple[float, float, float]]:
@@ -182,8 +179,8 @@ def main() -> None:
     """
     Main entry point.
 
-    Looks under ./runs, finds latest manager-*.out, parses timings and config,
-    and appends rows to ./runs/manager_timings.csv.
+    Looks under ./runs, finds latest manager-*.out, parses timings, and
+    pulls model/nodes from run_pipeline.sh. Appends rows to ./runs/manager_timings.csv.
     """
     runs_root = "./runs"
     csv_path = "./manager_timings.csv"
@@ -200,13 +197,14 @@ def main() -> None:
         print("Could not find 'Run dir: ...' in manager log")
         return
 
-    config_path = os.path.join(run_dir, "config.yml")
-    base_session, num_nodes = parse_config_for_model_and_nodes(config_path)
-
     print(f"Run dir: {run_dir}")
-    print(f"Config: {config_path}")
-    print(f"base_session: {base_session}")
-    print(f"nodes: {num_nodes}")
+
+    pipeline_path = "./run_pipeline.sh"
+    base_session, num_nodes = parse_run_pipeline_for_model_and_nodes(pipeline_path)
+
+    print(f"Parsed from {pipeline_path}:")
+    print(f"  base_session: {base_session}")
+    print(f"  nodes: {num_nodes}")
 
     timings = parse_timings_from_log(manager_log)
     print(f"Found {len(timings)} timing blocks in log")
