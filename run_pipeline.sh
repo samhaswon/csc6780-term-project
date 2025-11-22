@@ -84,7 +84,7 @@ echo "$nodes"
 echo "Wrote patch_servers and devices to $CONFIG"
 
 # Start one patch_server per node
-srun --ntasks-per-node=1 python3 "${RUN_ROOT}/patch_server.py"
+srun --ntasks-per-node=1 python3 -u "${RUN_ROOT}/patch_server.py"
 EOF
 
 chmod +x "${RUN_DIR}/patch_servers.sbatch"
@@ -147,7 +147,7 @@ fi
 echo "${HOSTNAME}:${MANAGER_PORT}" > "$MANAGER_ADDR_FILE"
 echo "Wrote manager address to $MANAGER_ADDR_FILE"
 
-python3 "${RUN_ROOT}/patch_manager_torch.py"
+python3 -u "${RUN_ROOT}/patch_manager_torch.py"
 EOF
 
 chmod +x "${RUN_DIR}/manager.sbatch"
@@ -195,7 +195,7 @@ echo "Manager address: $MANAGER_ADDR"
 # Small grace delay to let manager start listening
 sleep 5
 
-python3 "${RUN_ROOT}/patch_client.py" --manager "$MANAGER_ADDR" --config "$CONFIG"
+python3 -u "${RUN_ROOT}/patch_client.py"
 EOF
 
 chmod +x "${RUN_DIR}/client.sbatch"

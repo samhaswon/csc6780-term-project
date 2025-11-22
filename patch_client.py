@@ -20,6 +20,8 @@ from networking.scatter_gather import (
 )
 
 
+NUM_ITERATIONS = 10
+
 # Struct stuff
 LEN_PREFIX_FMT = "!Q"
 LEN_PREFIX_SIZE = struct.calcsize(LEN_PREFIX_FMT)
@@ -121,3 +123,8 @@ if __name__ == '__main__':
     # Write out the result
     result = np.dstack((cv2.cvtColor(test_image_np, cv2.COLOR_RGB2BGR), result_alpha))
     cv2.imwrite("test.png", result)
+
+    print("Warmup done. Doing inference test.")
+    for _ in range(NUM_ITERATIONS):
+        segment_image(test_image_np, next(server_addresses))
+    print("Done")

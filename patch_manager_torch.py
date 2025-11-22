@@ -48,6 +48,7 @@ async def main():
             conn, addr = srv.accept()
             try:
                 print(f"[manager] connection from {addr}", file=sys.stderr)
+                conn_start = time.perf_counter()
 
                 hdr = recv_exact(conn, LEN_PREFIX_SIZE)
                 (req_len,) = struct.unpack(LEN_PREFIX_FMT, hdr)
@@ -58,7 +59,9 @@ async def main():
                     raise ValueError("Input must be an RGB array (H, W, 3).")
 
                 # Do the base prediction
+                base_start = time.perf_counter()
                 base_alpha = base_session.remove(Image.fromarray(arr), mask_only=True)
+                base_end = time.perf_counter()
 
                 # Generate boxes
                 boxes = select_tiles_edge_mixture(base_alpha)
@@ -71,7 +74,6 @@ async def main():
                     *(request_patch(tile, next(server_addresses)) for tile in tiles)
                 )
                 patch_end = time.perf_counter()
-                print(f"Patch time: {patch_end - patch_start:.4f}s")
                 # Put the tiles together to make the result mask
                 stitched = stitch_mask_tiles(
                     mask_tiles,
@@ -82,6 +84,10 @@ async def main():
                 out_bytes = serialize_ndarray(stitched)
                 conn.sendall(struct.pack(LEN_PREFIX_FMT, len(out_bytes)))
                 conn.sendall(out_bytes)
+                conn_end = time.perf_counter()
+                print(f"Base time: {base_end-base_start:.4f}s\n"
+                      f"Patch time: {patch_end - patch_start:.4f}s\n"
+                      f"Total time: {conn_end - conn_start:.4f}s", file=sys.stderr)
             except Exception as exc:
                 print(f"[manager] error handling {addr}: {exc!r}", file=sys.stderr)
             finally:
