@@ -97,6 +97,8 @@ cat > "${RUN_DIR}/manager.sbatch" << 'EOF'
 #SBATCH --account=csc6780-2025f-inference
 #SBATCH --job-name=manager
 #SBATCH --gres=gpu:1
+#SBATCH --mem=32GB
+#SBATCH --cpus-per-task=16
 #SBATCH --time=02:00:00
 #SBATCH --output=runs/manager-%j.out
 
