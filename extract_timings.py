@@ -11,7 +11,7 @@ def find_latest_manager_log(runs_root: str) -> Optional[str]:
     Find the newest manager-*.out file under runs_root.
 
     :param runs_root: Root directory containing run logs.
-    :returns: Path to the newest manager log or None if none found.
+    :returns: Path to newest manager log or None if none found.
     """
     pattern = os.path.join(runs_root, "**", "manager-*.out")
     candidates = glob.glob(pattern, recursive=True)
@@ -38,8 +38,16 @@ def extract_run_dir_from_log(log_path: str) -> Optional[str]:
 
 def parse_config_for_model_and_nodes(config_path: str) -> Tuple[Optional[str], Optional[int]]:
     """
-    Parse base_session model and number of nodes from config.yml,
-    without relying on external YAML libraries.
+    Parse base_session model and number of nodes from config.yml, using regex.
+
+    Looks for:
+      base_session:
+        - "MODEL_NAME"
+
+    And:
+      patch_servers:
+        - "nodeA:5432"
+        - "nodeB:5432"
 
     :param config_path: Path to config.yml file.
     :returns: (base_session_model, num_nodes) or (None, None) on failure.
@@ -47,53 +55,32 @@ def parse_config_for_model_and_nodes(config_path: str) -> Tuple[Optional[str], O
     if not os.path.exists(config_path):
         return None, None
 
-    model = None
-    num_nodes = None
-    in_patch_servers = False
-    patch_count = 0
-
     with open(config_path, "r", encoding="utf-8", errors="ignore") as cfg:
-        lines = cfg.readlines()
+        text = cfg.read()
 
-    # First pass: base_session model
-    for i, line in enumerate(lines):
-        if line.strip().startswith("base_session:"):
-            # Assume next non-empty line starting with "-" has the model
-            for j in range(i + 1, len(lines)):
-                next_line = lines[j].strip()
-                if not next_line:
-                    continue
-                if next_line.startswith("-"):
-                    # Extract between quotes if present
-                    match = re.search(r'"([^"]+)"', next_line)
-                    model = match.group(1) if match else next_line.lstrip("- ").strip()
-                    break
-            break
+    # base_session: first list entry
+    base_session = None
+    base_match = re.search(
+        r"base_session:\s*\n\s*-\s*['\"]([^'\"]+)['\"]",
+        text,
+        flags=re.MULTILINE,
+    )
+    if base_match:
+        base_session = base_match.group(1)
 
-    # Second pass: patch_servers entries = number of nodes
-    for line in lines:
-        stripped = line.rstrip("\n")
-        if stripped.startswith("patch_servers:"):
-            in_patch_servers = True
-            continue
+    # patch_servers: count the list entries
+    num_nodes = None
+    patch_section_match = re.search(
+        r"patch_servers:\s*((?:\n\s*-\s*['\"][^'\"]+['\"])+)",
+        text,
+        flags=re.MULTILINE,
+    )
+    if patch_section_match:
+        block = patch_section_match.group(1)
+        # each list entry starts with "-"
+        num_nodes = len(re.findall(r"\n\s*-\s*['\"][^'\"]+['\"]", block))
 
-        if in_patch_servers:
-            # List items for patch_servers are indented and start with "-"
-            stripped_no_space = stripped.lstrip()
-            if not stripped_no_space:
-                # Empty line, stop section
-                break
-
-            if stripped_no_space.startswith("-"):
-                patch_count += 1
-            else:
-                # Reached next top-level or another key
-                break
-
-    if patch_count > 0:
-        num_nodes = patch_count
-
-    return model, num_nodes
+    return base_session, num_nodes
 
 
 def parse_timings_from_log(log_path: str) -> List[Tuple[float, float, float]]:
@@ -121,10 +108,7 @@ def parse_timings_from_log(log_path: str) -> List[Tuple[float, float, float]]:
             i += 1
             continue
 
-        # Expect the next two lines to be Patch and Total
-        base_time = float(base_match.group(1))
-
-        if i + 1 >= len(lines) or i + 2 >= len(lines):
+        if i + 2 >= len(lines):
             break
 
         patch_line = lines[i + 1].strip()
@@ -137,6 +121,7 @@ def parse_timings_from_log(log_path: str) -> List[Tuple[float, float, float]]:
             i += 1
             continue
 
+        base_time = float(base_match.group(1))
         patch_time = float(patch_match.group(1))
         total_time = float(total_match.group(1))
 
@@ -163,11 +148,13 @@ def append_timings_to_csv(
     :param timings: List of (base_time, patch_time, total_time).
     """
     if not timings:
+        print("No timing blocks found, nothing to write.")
         return
 
     # Drop the first instance
     timings = timings[1:]
     if not timings:
+        print("Only one timing block found, nothing to write after dropping first.")
         return
 
     file_exists = os.path.exists(csv_path)

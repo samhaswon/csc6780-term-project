@@ -64,10 +64,10 @@ echo "$nodes"
   echo '  - "birefnet"'          # u2net, u2netp, or birefnet
 
   echo 'patch_server_device:'
-  echo '  - "cuda"'
+  echo '  - "cpu"'
 
   echo 'manager_server_device:'
-  echo '  - "cpu"'
+  echo '  - "cuda"'
 
   echo 'patch_server_port:'
   echo "  - \"${PATCH_PORT}\""
