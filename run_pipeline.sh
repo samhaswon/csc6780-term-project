@@ -207,6 +207,8 @@ PATCH_JOBID=$(sbatch --export=ALL,RUN_ROOT="$RUN_ROOT",RUN_DIR="$RUN_DIR" \
 MANAGER_JOBID=$(sbatch --export=ALL,RUN_ROOT="$RUN_ROOT",RUN_DIR="$RUN_DIR" \
     "${RUN_DIR}/manager.sbatch" | awk '{print $4}')
 
+# Wait a little bit for all of the servers to start
+sleep 15
 CLIENT_JOBID=$(sbatch --export=ALL,RUN_ROOT="$RUN_ROOT",RUN_DIR="$RUN_DIR" \
     "${RUN_DIR}/client.sbatch" | awk '{print $4}')
 
