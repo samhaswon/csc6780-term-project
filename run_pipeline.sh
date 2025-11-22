@@ -204,6 +204,8 @@ chmod +x "${RUN_DIR}/client.sbatch"
 PATCH_JOBID=$(sbatch --export=ALL,RUN_ROOT="$RUN_ROOT",RUN_DIR="$RUN_DIR" \
     "${RUN_DIR}/patch_servers.sbatch" | awk '{print $4}')
 
+# Wait for job allocation, but not server startup. We'll wait on that later.
+sleep 5
 MANAGER_JOBID=$(sbatch --export=ALL,RUN_ROOT="$RUN_ROOT",RUN_DIR="$RUN_DIR" \
     "${RUN_DIR}/manager.sbatch" | awk '{print $4}')
 
