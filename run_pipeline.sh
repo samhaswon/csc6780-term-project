@@ -226,9 +226,17 @@ echo "  client:        ${CLIENT_JOBID}"
 ###############################################################################
 echo "Waiting for client job ${CLIENT_JOBID} to finish..."
 
-while squeue -h -j "$CLIENT_JOBID" >/dev/null 2>&1; do
+
+while true; do
+    # If squeue shows no such job, we are done (completed, failed, or cancelled).
+    if ! squeue -h -j "$CLIENT_JOBID" | grep -q "$CLIENT_JOBID"; then
+        echo "Client job ${CLIENT_JOBID} is no longer in the queue."
+        break
+    fi
     sleep 10
 done
+
+echo "Client job ${CLIENT_JOBID} finished (or left the queue)."
 
 echo "Client job ${CLIENT_JOBID} finished."
 
