@@ -93,7 +93,8 @@ def segment_image(
     arr = _ensure_rgb_numpy(image)
     payload = serialize_ndarray(arr)
     host, port = parse_server_addr(server_addr)
-    resp = _send_and_receive_sync(host, port, payload, timeout=600)
+    # The timeout is really high mostly for the single inference node case.
+    resp = _send_and_receive_sync(host, port, payload, timeout=6000)
     out = deserialize_ndarray(resp)
 
     if not isinstance(out, np.ndarray) or out.ndim != 2 or out.shape[:2] != arr.shape[:2]:
