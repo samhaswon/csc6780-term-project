@@ -24,7 +24,7 @@ cat > "${RUN_DIR}/patch_servers.sbatch" << 'EOF'
 #SBATCH --account=csc6780-2025f-inference
 #SBATCH --job-name=patch_servers
 #SBATCH --partition=batch-impulse
-#SBATCH --nodes=28              # Set the number of worker nodes for this run
+#SBATCH --nodes=29              # Set the number of worker nodes for this run
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=28
 #SBATCH --time=02:00:00
