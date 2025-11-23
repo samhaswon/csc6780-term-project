@@ -104,7 +104,37 @@ def main():
         fig.savefig(out_path, dpi=150)
         plt.close(fig)
 
-    print(f"Wrote {len(models)} plot(s) to: {args.outdir}")
+    # Overall average patch_time across all models per node
+    overall = (
+        agg.groupby(["nodes"], as_index=False)[["patch_time"]]
+        .mean()
+        .sort_values("nodes")
+    )
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.plot(
+        overall["nodes"],
+        overall["patch_time"],
+        marker="o",
+        linewidth=2,
+        markersize=4,
+        color=colors["patch_time"],
+        label="Patch (avg across models)",
+    )
+    ax.set_xlabel("Nodes")
+    ax.set_ylabel("Average Patch Time (s)")
+    ax.set_title("Average Patch Time vs Nodes (All Models)")
+    ax.grid(True, linestyle=":", linewidth=0.8, alpha=0.7)
+    ax.legend(frameon=False)
+
+    out_path_overall = args.outdir / "manager_timings_patch_overall.png"
+    fig.tight_layout()
+    fig.savefig(out_path_overall, dpi=150)
+    plt.close(fig)
+
+    print(
+        f"Wrote {len(models)} model plot(s) and overall patch plot to: {args.outdir}"
+    )
 
 
 if __name__ == "__main__":
