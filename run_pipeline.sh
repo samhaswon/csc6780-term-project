@@ -24,7 +24,7 @@ cat > "${RUN_DIR}/patch_servers.sbatch" << 'EOF'
 #SBATCH --account=csc6780-2025f-inference
 #SBATCH --job-name=patch_servers
 #SBATCH --partition=batch-impulse
-#SBATCH --nodes=35              # Set the number of worker nodes for this run
+#SBATCH --nodes=8              # Set the number of worker nodes for this run
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=28
 #SBATCH --time=02:00:00
@@ -61,7 +61,7 @@ echo "$nodes"
 # Adjust those parameters here.
 {
   echo 'base_session:'
-  echo '  - "u2netp"'          # u2net, u2netp, or birefnet
+  echo '  - "birefnet"'          # u2net, u2netp, or birefnet
 
   echo 'patch_server_device:'
   echo '  - "cpu"'
