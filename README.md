@@ -57,6 +57,13 @@ If you get an error, just run it again.
 pip install -r requirements.txt
 ```
 
+If you're running locally, you might need to change the PyTorch installation to not 
+include the CUDA libraries if you're on Mac or otherwise don't have CUDA capabilities.
+Additionally, if you intend to make the plots, you will need to install additional dependencies.
+```bash
+pip install -r requirements_graphs.txt
+```
+
 Afterward, you can just `exit` the interactive session as we are done with it.
 
 # Running The Code
