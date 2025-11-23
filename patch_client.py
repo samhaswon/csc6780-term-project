@@ -20,7 +20,10 @@ from networking.scatter_gather import (
 )
 
 
-NUM_ITERATIONS = 10
+# Number of benchmark iterations
+NUM_ITERATIONS: int = 10
+# Whether to do the benchmark (True for cluster testing)
+DO_BENCHMARK: bool = True
 
 # Struct stuff
 LEN_PREFIX_FMT = "!Q"
@@ -104,7 +107,7 @@ def segment_image(
 
 if __name__ == '__main__':
     # Parse args
-    with open("config.yml", "r") as f:
+    with open("config.yml", "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
     # Make cycle of server addresses (fair-queuing, a.k.a. round robin)
@@ -125,7 +128,10 @@ if __name__ == '__main__':
     result = np.dstack((cv2.cvtColor(test_image_np, cv2.COLOR_RGB2BGR), result_alpha))
     cv2.imwrite("test.png", result)
 
-    print("Warmup done. Doing inference test.")
-    for _ in range(NUM_ITERATIONS):
-        segment_image(test_image_np, next(server_addresses))
-    print("Done")
+    # The previous run should have handled the JIT/eager-mode warmup.
+    # So start running the main benchmark (logs are from the manager).
+    if DO_BENCHMARK:
+        print("Warmup done. Doing inference test.")
+        for _ in range(NUM_ITERATIONS):
+            segment_image(test_image_np, next(server_addresses))
+        print("Done")
