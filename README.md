@@ -1,6 +1,7 @@
 # csc6780-term-project
 Distributed Computing Term Project
 
+Samuel Howard, Seif Ikbarieh, Om Solanki
 # Setup
 
 The following instructions are for the HPC cluster.
