@@ -216,3 +216,4 @@ test_boxed.jpg
 
 # Job scripts (distinct from other scripts)
 *.sbatch
+plots/
