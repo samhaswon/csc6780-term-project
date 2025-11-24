@@ -169,6 +169,29 @@ def main():
     fig.savefig(out_total_by_model, dpi=150)
     plt.close(fig)
 
+    fig_log, ax_log = plt.subplots(figsize=(9, 5))
+    for i, model in enumerate(models):
+        sub = agg[agg["base_session"] == model].sort_values("nodes")
+        ax_log.plot(
+            sub["nodes"],
+            sub["total_time"],
+            marker="o",
+            linewidth=2,
+            markersize=4,
+            color=model_palette[i % len(model_palette)],
+            label=pretty_names.get(model, model),
+        )
+    ax_log.set_xlabel("Nodes")
+    ax_log.set_ylabel("Average Total Time (s)")
+    ax_log.set_yscale("log")
+    ax_log.set_title("Total Time vs Nodes (By Model, log-scale)")
+    ax_log.grid(True, linestyle=":", linewidth=0.8, alpha=0.7)
+    ax_log.legend(title="Model", frameon=False, ncol=1)
+    out_total_log = args.outdir / "manager_timings_total_by_model_log.png"
+    fig_log.tight_layout()
+    fig_log.savefig(out_total_log, dpi=150)
+    plt.close(fig_log)
+
     # Bar chart: average base_time per model (averaged over node means)
     base_by_model = (
         agg.groupby(["base_session"], as_index=False)[["base_time"]]
@@ -189,7 +212,7 @@ def main():
     plt.close(fig)
 
     print(
-        f"Wrote {len(models)} model plot(s), total-time comparison plot, base-time bar chart, and overall patch plot to: {args.outdir}"
+        f"Wrote {len(models)} model plot(s), total-time comparison plots (linear/log), base-time bar chart, and overall patch plot to: {args.outdir}"
     )
 
 
