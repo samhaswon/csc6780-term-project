@@ -145,8 +145,51 @@ def main():
     fig.savefig(out_path_overall, dpi=150)
     plt.close(fig)
 
+    # Comparison plot: total_time per model vs nodes on one figure
+    fig, ax = plt.subplots(figsize=(9, 5))
+    model_palette = list(plt.cm.tab10.colors)
+    for i, model in enumerate(models):
+        sub = agg[agg["base_session"] == model].sort_values("nodes")
+        ax.plot(
+            sub["nodes"],
+            sub["total_time"],
+            marker="o",
+            linewidth=2,
+            markersize=4,
+            color=model_palette[i % len(model_palette)],
+            label=pretty_names.get(model, model),
+        )
+    ax.set_xlabel("Nodes")
+    ax.set_ylabel("Average Total Time (s)")
+    ax.set_title("Total Time vs Nodes (By Model)")
+    ax.grid(True, linestyle=":", linewidth=0.8, alpha=0.7)
+    ax.legend(title="Model", frameon=False, ncol=1)
+    out_total_by_model = args.outdir / "manager_timings_total_by_model.png"
+    fig.tight_layout()
+    fig.savefig(out_total_by_model, dpi=150)
+    plt.close(fig)
+
+    # Bar chart: average base_time per model (averaged over node means)
+    base_by_model = (
+        agg.groupby(["base_session"], as_index=False)[["base_time"]]
+        .mean()
+        .sort_values("base_time")
+    )
+    fig, ax = plt.subplots(figsize=(7.5, 4.5))
+    x_labels = [pretty_names.get(m, m) for m in base_by_model["base_session"]]
+    ax.bar(x_labels, base_by_model["base_time"], color=colors["base_time"], alpha=0.9)
+    ax.set_ylabel("Average Base Time (s)")
+    ax.set_title("Average Base Time by Model")
+    ax.grid(True, axis="y", linestyle=":", linewidth=0.8, alpha=0.7)
+    for idx, v in enumerate(base_by_model["base_time"]):
+        ax.text(idx, v, f"{v:.2f}", ha="center", va="bottom", fontsize=8)
+    fig.tight_layout()
+    out_base_bar = args.outdir / "manager_base_time_by_model.png"
+    fig.savefig(out_base_bar, dpi=150)
+    plt.close(fig)
+
     print(
-        f"Wrote {len(models)} model plot(s) and overall patch plot to: {args.outdir}"
+        f"Wrote {len(models)} model plot(s), total-time comparison plot, base-time bar chart, and overall patch plot to: {args.outdir}"
     )
 
 
