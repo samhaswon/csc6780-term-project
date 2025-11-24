@@ -1,14 +1,21 @@
 #!/usr/bin/env python3
+
+"""
+Plot manager timings.
+Run with: python3 plot_manager_timings.py --csv manager_timings.csv --outdir plots
+"""
 import argparse
 from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")  # ensure non-interactive backend for headless environments
+# pylint: disable=wrong-import-position
 import matplotlib.pyplot as plt
 import pandas as pd
 
 
 def parse_args():
+    """Parse CLI arguments or display the help message."""
     p = argparse.ArgumentParser(description="Plot average manager timings per model vs nodes.")
     p.add_argument(
         "--csv",
@@ -25,7 +32,9 @@ def parse_args():
     return p.parse_args()
 
 
+# pylint: disable=too-many-locals
 def main():
+    """main"""
     args = parse_args()
 
     if not args.csv.exists():
@@ -47,11 +56,15 @@ def main():
     df["nodes"] = pd.to_numeric(df["nodes"], errors="coerce").astype("Int64")
     for c in ("base_time", "patch_time", "total_time"):
         df[c] = pd.to_numeric(df[c], errors="coerce")
-    df = df.dropna(subset=["base_session", "nodes", "base_time", "patch_time", "total_time"])  # keep valid rows
+    df = df.dropna(
+        subset=["base_session", "nodes", "base_time", "patch_time", "total_time"]
+    )  # keep valid rows
 
     # Aggregate: mean per (base_session, nodes)
     agg = (
-        df.groupby(["base_session", "nodes"], as_index=False)[["base_time", "patch_time", "total_time"]]
+        df.groupby(
+            ["base_session", "nodes"], as_index=False
+        )[["base_time", "patch_time", "total_time"]]
         .mean()
     )
 
