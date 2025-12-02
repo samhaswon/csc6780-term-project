@@ -166,3 +166,13 @@ This script expects the `plots/` folder to already exist.
 ---
 
 If you can't tell by now, we have 3 people in our group.
+
+## Generating The Patch Demonstration
+
+To generate the patch demonstration image(s), run this:
+```bash
+python3 box_demo.py
+```
+
+You can also go to the end of the file and test out some of your own images if you wish.
+
