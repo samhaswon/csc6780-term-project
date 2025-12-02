@@ -23,9 +23,9 @@ from tile_proc.tiles import select_tiles_edge_mixture, extract_rgb_tiles, stitch
 # DEVICE 0 takes both the refiner and base model.
 # DEVICE 1 takes only the refiner
 DEVICE0 = "cuda:0"  # cuda for one or cuda:0 for two
-DEVICE0_BATCH_SIZE = 12
+DEVICE0_BATCH_SIZE = 8
 DEVICE1 = "cuda:1"  # None or "cuda:1"
-DEVICE1_BATCH_SIZE = 12
+DEVICE1_BATCH_SIZE = 8
 
 TEST_PASSES = 20
 
@@ -92,7 +92,7 @@ def run_refiner_on_tiles(
         batch_arr = np.stack(batch_tiles).astype(np.float32) / 255.0
         batch_tensor = torch.from_numpy(batch_arr)
         batch_tensor = batch_tensor.permute(0, 3, 1, 2).contiguous()
-        batch_tensor = batch_tensor.to(device)
+        batch_tensor = batch_tensor.to(device, non_blocking=True)
 
         with torch.inference_mode():
             out = refiner(batch_tensor)
