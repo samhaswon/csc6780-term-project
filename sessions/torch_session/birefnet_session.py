@@ -85,6 +85,12 @@ class BiRefNetTorchSession:
         self.net = BiRefNetHFAdapter(net).to(self.device)
         self.net.eval()
         self.half_precision = half_precision
+        if half_precision:
+            self.net.half()
+
+    def compile(self):
+        """JIT compiles the model."""
+        self.net = torch.compile(self.net)
 
     def remove(
             self,
@@ -106,13 +112,12 @@ class BiRefNetTorchSession:
         image_tensor, pad_h, pad_w = resize_and_pad_square(image_tensor, size[0])
         image_tensor = image_tensor.to(self.device)
         image_tensor = image_tensor.unsqueeze(0)
-        with (torch.inference_mode(),
-              torch.autocast(
-                  device_type=self.device,
-                  dtype=torch.float16,
-                  enabled=self.half_precision)
-              ):
+        if self.half_precision:
+            image_tensor = image_tensor.half()
+        with torch.inference_mode():
             img_result = self.net(image_tensor)
+        if self.half_precision:
+            img_result = img_result.to(torch.float32)
         img_result = img_result[..., :IMAGE_SIZE - pad_h, :IMAGE_SIZE - pad_w]
         img_result = torch.sigmoid(img_result)
         img_result = torch.where(img_result > 0.5, img_result, torch.tensor(0.0))
