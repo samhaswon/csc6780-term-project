@@ -38,7 +38,7 @@ def load_refiner(device: str) -> torch.nn.Module:
         net.load_state_dict(
             torch.load(model_path, weights_only=False)
         )
-        net.cuda()
+        net.to(device)
     else:
         net.load_state_dict(
             torch.load(
@@ -206,7 +206,7 @@ def main():
     # Load models
     print(f"Loading models to {DEVICE0} and {DEVICE1}...")
     base_session = BiRefNetTorchSession(half_precision=True, device=DEVICE0)
-    # Tell Torch to compile it later (eager mode means it'll take a minute)
+    # Tell Torch to compile it later (eager mode means it'll take a minute later)
     base_session.compile()
     if DEVICE0 != DEVICE1:
         refiner0, refiner1 = load_refiner(DEVICE0), load_refiner(DEVICE1)
@@ -238,7 +238,10 @@ def main():
 
 
 if __name__ == '__main__':
+    torch.backends.cudnn.benchmark = True
     if "cuda" in DEVICE0:
+        torch.backends.cudnn.conv.fp32_precision = 'tf32'
         torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.fp32_precision = "tf32"
         print("Using TF32 for some calculations")
     main()
