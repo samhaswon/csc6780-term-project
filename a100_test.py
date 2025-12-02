@@ -23,9 +23,9 @@ from tile_proc.tiles import select_tiles_edge_mixture, extract_rgb_tiles, stitch
 # DEVICE 0 takes both the refiner and base model.
 # DEVICE 1 takes only the refiner
 DEVICE0 = "cuda:0"  # cuda for one or cuda:0 for two
-DEVICE0_BATCH_SIZE = 1
+DEVICE0_BATCH_SIZE = 8
 DEVICE1 = "cuda:1"  # None or "cuda:1"
-DEVICE1_BATCH_SIZE = 1
+DEVICE1_BATCH_SIZE = 8
 
 TEST_PASSES = 20
 
