@@ -1,6 +1,7 @@
 """
 Quick, messy test for A100 inference.
 """
+from concurrent.futures import ThreadPoolExecutor
 import csv
 from pathlib import Path
 import time
@@ -28,6 +29,7 @@ DEVICE1 = "cuda:1"  # None or "cuda:1"
 DEVICE1_BATCH_SIZE = 8
 
 TEST_PASSES = 20
+executor: ThreadPoolExecutor | None = None
 
 
 def load_refiner(device: str) -> torch.nn.Module:
@@ -134,8 +136,25 @@ def refine_tiles_dual(
     tiles0 = tiles[:mid]
     tiles1 = tiles[mid:]
 
-    masks0 = run_refiner_on_tiles(refiner0, tiles0, DEVICE0, DEVICE0_BATCH_SIZE)
-    masks1 = run_refiner_on_tiles(refiner1, tiles1, DEVICE1, DEVICE1_BATCH_SIZE)
+    assert executor is not None
+
+    future0 = executor.submit(
+        run_refiner_on_tiles,
+        refiner0,
+        tiles0,
+        DEVICE0,
+        DEVICE0_BATCH_SIZE
+    )
+    future1 = executor.submit(
+        run_refiner_on_tiles,
+        refiner1,
+        tiles1,
+        DEVICE1,
+        DEVICE1_BATCH_SIZE
+    )
+
+    masks0 = future0.result()
+    masks1 = future1.result()
 
     return masks0 + masks1
 
@@ -218,23 +237,30 @@ def main():
         img = img.convert("RGB")
     img_arr = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
 
-    # Warm up JIT stuff
-    print("Running warm-up inference...")
-    warm_up_start = time.perf_counter()
-    mask, *_ = infer_once(base_session, refiner0, refiner1, img)
-    warm_up_end = time.perf_counter()
-    print(f"Warm-up took {warm_up_end - warm_up_start:.4f} seconds.")
-    img_arr = np.dstack((img_arr, mask))
-    cv2.imwrite("test.png", img_arr)
+    # Make the thread pool
+    executor = ThreadPoolExecutor(max_workers=2)
 
-    if TEST_PASSES > 0:
-        time_list: List[Tuple[float, float, float]] = []
-        print("Running test")
-        for _ in range(TEST_PASSES):
-            _, *times = infer_once(base_session, refiner0, refiner1, img)
-            time_list.append(times)
-        write_times_csv("a100_test.csv", time_list)
-        print("Done")
+    try:
+        # Warm up JIT stuff
+        print("Running warm-up inference...")
+        warm_up_start = time.perf_counter()
+        mask, *_ = infer_once(base_session, refiner0, refiner1, img)
+        warm_up_end = time.perf_counter()
+        print(f"Warm-up took {warm_up_end - warm_up_start:.4f} seconds.")
+        img_arr = np.dstack((img_arr, mask))
+        cv2.imwrite("test.png", img_arr)
+
+        if TEST_PASSES > 0:
+            time_list: List[Tuple[float, float, float]] = []
+            print("Running test")
+            for _ in range(TEST_PASSES):
+                _, *times = infer_once(base_session, refiner0, refiner1, img)
+                time_list.append(times)
+            write_times_csv("a100_test.csv", time_list)
+            print("Done")
+    finally:
+        if executor is not None:
+            executor.shutdown(wait=True)
 
 
 if __name__ == '__main__':
