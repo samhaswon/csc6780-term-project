@@ -23,9 +23,9 @@ from tile_proc.tiles import select_tiles_edge_mixture, extract_rgb_tiles, stitch
 # DEVICE 0 takes both the refiner and base model.
 # DEVICE 1 takes only the refiner
 DEVICE0 = "cuda:0"  # cuda for one or cuda:0 for two
-DEVICE0_BATCH_SIZE = 8
+DEVICE0_BATCH_SIZE = 18
 DEVICE1 = "cuda:1"  # None or "cuda:1"
-DEVICE1_BATCH_SIZE = 8
+DEVICE1_BATCH_SIZE = 18
 
 TEST_PASSES = 20
 
@@ -235,13 +235,13 @@ def main():
             _, *times = infer_once(base_session, refiner0, refiner1, img)
             time_list.append(times)
         write_times_csv("a100_test.csv", time_list)
+        print("Done")
 
 
 if __name__ == '__main__':
     torch.backends.cudnn.benchmark = True
     if "cuda" in DEVICE0:
         torch.backends.cudnn.conv.fp32_precision = 'tf32'
-        torch.backends.cuda.matmul.allow_tf32 = True
         torch.backends.fp32_precision = "tf32"
         print("Using TF32 for some calculations")
     main()
