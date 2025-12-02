@@ -68,7 +68,7 @@ Afterward, you can just `exit` the interactive session as we are done with it.
 
 # Running The Code
 
-## Running On The Cluster
+## Running On The Cluster: Multi-Node
 
 If you're on the cluster, we have a single script that sets up and runs all the job stuff.
 There are a few parameters near the top to change:
@@ -102,6 +102,14 @@ git pull
 python3 extract_timings.py
 ```
 
+## Running On The Cluster: Single Node
+
+For single-node inference, the process is much simpler as there is only a single job to run.
+It is simply:
+```bash
+sbatch single_node_inference.sh
+```
+
 ## Running Locally
 
 To run the code locally, you will need to start each server and the client.
@@ -131,3 +139,30 @@ python3 patch_client.py
 ```
 
 If you want to use your own input image, you can change the file loaded in `patch_client.py`.
+
+## Generating Graphs
+
+There are a few graph generation scripts included in this repository.
+All require the graph requirements to be installed in the virtual environment and for it to be activated.
+
+For cluster run times:
+```bash
+python3 plot_manager_timings.py
+```
+You can also use the `--csv` to specify the CSV file path and `--outdir` to specify the target output directory.
+
+For single-node timings:
+```bash
+python3 plot_a100_timings.py
+```
+This script expects the `plots/` folder to already exist and for the CSV file to be named `a100_test.csv`.
+
+For inference times:
+```bash
+python3 plot_inference_times.py
+```
+This script expects the `plots/` folder to already exist.
+
+---
+
+If you can't tell by now, we have 3 people in our group.
