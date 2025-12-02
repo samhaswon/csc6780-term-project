@@ -246,6 +246,8 @@ def main():
         # Warm up JIT stuff
         print("Running warm-up inference...")
         warm_up_start = time.perf_counter()
+        # Do it twice to fully warm up the JIT instances
+        mask, *_ = infer_once(base_session, refiner0, refiner1, img)
         mask, *_ = infer_once(base_session, refiner0, refiner1, img)
         warm_up_end = time.perf_counter()
         print(f"Warm-up took {warm_up_end - warm_up_start:.4f} seconds.")
