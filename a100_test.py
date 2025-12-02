@@ -93,7 +93,7 @@ def run_refiner_on_tiles(
         batch_arr = np.stack(batch_tiles).astype(np.float32) / 255.0
         batch_tensor = torch.from_numpy(batch_arr)
         batch_tensor = batch_tensor.permute(0, 3, 1, 2).contiguous()
-        batch_tensor = batch_tensor.to(device, non_blocking=True)
+        batch_tensor = batch_tensor.to(device)
 
         with torch.inference_mode():
             out = refiner(batch_tensor)
