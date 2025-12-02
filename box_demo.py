@@ -166,9 +166,11 @@ def make_comparisons(img_path: str, box_indices: List[int], img_index: int = 0, 
 if __name__ == '__main__':
     # test.jpg: 72 boxes
     make_comparisons("./test_inputs/test.jpg", [0, 13], 0, save_boxed=True)
+
+    # Local files are commented out as they are not in the repository
     # 01167: 17 boxes
-    make_comparisons("/home/samuel/da/skindataset/images/01167.png", [0, 6], 1)
+    # make_comparisons("/home/samuel/da/skindataset/images/01167.png", [0, 6], 1)
     # 11 boxes
-    make_comparisons("/home/samuel/da/skindataset/images/00896.png", [0, 2], 2)
+    # make_comparisons("/home/samuel/da/skindataset/images/00896.png", [0, 2], 2)
     # 98 boxes
-    make_comparisons("/home/samuel/da/skindataset/images/00793.png", [9], 3)
+    # make_comparisons("/home/samuel/da/skindataset/images/00793.png", [9], 3)
