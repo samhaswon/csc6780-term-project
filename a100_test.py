@@ -1,6 +1,7 @@
 """
 Quick, messy test for A100 inference.
 """
+from concurrent.futures import ThreadPoolExecutor
 import csv
 from pathlib import Path
 import time
@@ -130,13 +131,28 @@ def refine_tiles_dual(
     if DEVICE0 == DEVICE1 or refiner0 is refiner1:
         return run_refiner_on_tiles(refiner0, tiles, DEVICE0, DEVICE0_BATCH_SIZE)
 
-    # Two different devices, same weights. Split tiles in half by count.
     mid = len(tiles) // 2
     tiles0 = tiles[:mid]
     tiles1 = tiles[mid:]
 
-    masks0 = run_refiner_on_tiles(refiner0, tiles0, DEVICE0, DEVICE0_BATCH_SIZE)
-    masks1 = run_refiner_on_tiles(refiner1, tiles1, DEVICE1, DEVICE1_BATCH_SIZE)
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        future0 = executor.submit(
+            run_refiner_on_tiles,
+            refiner0,
+            tiles0,
+            DEVICE0,
+            DEVICE0_BATCH_SIZE
+        )
+        future1 = executor.submit(
+            run_refiner_on_tiles,
+            refiner1,
+            tiles1,
+            DEVICE1,
+            DEVICE1_BATCH_SIZE
+        )
+
+        masks0 = future0.result()
+        masks1 = future1.result()
 
     return masks0 + masks1
 
