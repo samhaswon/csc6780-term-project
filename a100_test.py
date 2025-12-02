@@ -1,6 +1,7 @@
 """
 Quick, messy test for A100 inference.
 """
+from __future__ import annotations
 from concurrent.futures import ThreadPoolExecutor
 import csv
 from pathlib import Path
@@ -125,6 +126,7 @@ def refine_tiles_dual(
     :param tiles: List of tiles to process.
     :return: List of mask tiles in the same order as input.
     """
+    global executor
     if not tiles:
         return []
 
@@ -217,7 +219,7 @@ def infer_once(
 
 def main():
     """Main function"""
-    global DEVICE0, DEVICE1
+    global DEVICE0, DEVICE1, executor
     if DEVICE1 is None:
         DEVICE1 = DEVICE0
 
