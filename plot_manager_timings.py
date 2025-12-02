@@ -8,7 +8,6 @@ import argparse
 from pathlib import Path
 
 import matplotlib
-matplotlib.use("Agg")  # ensure non-interactive backend for headless environments
 # pylint: disable=wrong-import-position
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -91,7 +90,7 @@ def main():
 
     for model in models:
         sub = agg[agg["base_session"] == model].sort_values("nodes")
-
+        plt.style.use('ggplot')
         fig, ax = plt.subplots(figsize=(8, 5))
 
         for col in ("base_time", "patch_time", "total_time"):
