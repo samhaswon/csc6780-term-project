@@ -29,7 +29,7 @@ DEVICE0_BATCH_SIZE = 8
 DEVICE1 = "cuda:1"  # None or "cuda:1"
 DEVICE1_BATCH_SIZE = 8
 
-TEST_PASSES = 20
+TEST_PASSES = 21
 executor: ThreadPoolExecutor | None = None
 
 
