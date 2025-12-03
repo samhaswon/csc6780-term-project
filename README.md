@@ -105,7 +105,7 @@ python3 extract_timings.py
 ## Running On The Cluster: Single Node
 
 For single-node inference, the process is much simpler as there is only a single job to run.
-It is simply:
+Just adjust `RUN_ROOT`: the root path where the code is, then it is simply:
 ```bash
 sbatch single_node_inference.sh
 ```
