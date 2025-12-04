@@ -278,10 +278,10 @@ def render_boxes(
         elif state_map.get(box) == "rejected":
             color = REJECTED_COLOR
         x0, y0, x1, y1 = box
-        cv2.rectangle(frame, (x0, y0), (x1 - 1, y1 - 1), color, 8)
+        cv2.rectangle(frame, (x0, y0), (x1 - 1, y1 - 1), color, 16)
     if highlight is not None:
         x0, y0, x1, y1 = highlight
-        cv2.rectangle(frame, (x0, y0), (x1 - 1, y1 - 1), HIGHLIGHT_COLOR, 16)
+        cv2.rectangle(frame, (x0, y0), (x1 - 1, y1 - 1), HIGHLIGHT_COLOR, 32)
     if text_lines:
         frame = draw_text_overlay(frame, text_lines)
     return frame
@@ -336,6 +336,7 @@ def build_animation_frames(
     final_boxes: Sequence[Box],
     fps: int,
     max_side: int = MAX_SIDE_PX,
+    speed_factor: float = 1.0,
 ) -> List[np.ndarray]:
     """
     Build the complete set of frames for the requested animation.
@@ -350,22 +351,27 @@ def build_animation_frames(
         for _ in range(max(0, count)):
             append_frame(img)
 
+    def scaled_count(base: int) -> int:
+        if base <= 0:
+            return 0
+        return max(1, int(round(base / max(speed_factor, 1e-6))))
+
     mask_bgr = cv2.cvtColor(mask_gray, cv2.COLOR_GRAY2BGR)
     colorized = colorize_magenta(image_bgr, mask_gray)
 
-    hold(image_bgr, fps // 2)
-    for frame in fade_frames(image_bgr, colorized, fps):
+    hold(image_bgr, scaled_count(fps // 2))
+    for frame in fade_frames(image_bgr, colorized, scaled_count(fps)):
         append_frame(frame)
-    hold(colorized, fps // 4)
-    for frame in fade_frames(colorized, mask_bgr, fps):
+    hold(colorized, scaled_count(fps // 4))
+    for frame in fade_frames(colorized, mask_bgr, scaled_count(fps)):
         append_frame(frame)
-    hold(mask_bgr, fps // 4)
+    hold(mask_bgr, scaled_count(fps // 4))
 
     ordered_boxes = [trace.box for trace in traces]
     state_map: Dict[Box, str] = {box: "pending" for box in ordered_boxes}
 
     intro_frame = render_boxes(mask_bgr, ordered_boxes, state_map, text_lines=["All candidate tiles"])
-    hold(intro_frame, fps // 3)
+    hold(intro_frame, scaled_count(fps // 3))
 
     for trace in traces:
         # Highlight evaluation
@@ -376,7 +382,7 @@ def build_animation_frames(
             highlight=trace.box,
             text_lines=describe_trace(trace),
         )
-        hold(highlight_frame, max(2, fps // 10))
+        hold(highlight_frame, scaled_count(max(2, fps // 10)))
 
         # Update state using final decision
         state_map[trace.box] = "selected" if trace.selected else "rejected"
@@ -386,15 +392,15 @@ def build_animation_frames(
             state_map,
             text_lines=describe_trace(trace),
         )
-        hold(settled, max(2, fps // 10))
+        hold(settled, scaled_count(max(2, fps // 10)))
 
     final_state = render_boxes(mask_bgr, ordered_boxes, state_map, text_lines=["Final tile selection"])
-    hold(final_state, fps // 2)
+    hold(final_state, scaled_count(fps // 2))
 
     boxed_image = draw_boxes(image_bgr, final_boxes, box_line_thickness=4)
-    for frame in fade_frames(final_state, boxed_image, fps):
+    for frame in fade_frames(final_state, boxed_image, scaled_count(fps)):
         append_frame(frame)
-    hold(boxed_image, fps // 2)
+    hold(boxed_image, scaled_count(fps // 2))
 
     return frames
 
@@ -435,6 +441,7 @@ def main() -> None:
     parser.add_argument("--output", type=Path, default=Path("plots/box_animation.mp4"), help="Output MP4 path.")
     parser.add_argument("--fps", type=int, default=30, help="Output frame rate.")
     parser.add_argument("--max-side", type=int, default=MAX_SIDE_PX, help="Clamp frames so the longest edge <= this value.")
+    parser.add_argument("--speed-factor", type=float, default=1.0, help=">1 speeds up (fewer frames), <1 slows down.")
     args = parser.parse_args()
 
     image_bgr, mask = load_mask(args.image, args.model)
@@ -479,6 +486,7 @@ def main() -> None:
         traced_boxes,
         fps=args.fps,
         max_side=args.max_side,
+        speed_factor=args.speed_factor,
     )
     write_video(frames, args.output, args.fps)
     print(f"Wrote animation to {args.output}")
