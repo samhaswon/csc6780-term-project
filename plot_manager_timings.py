@@ -113,7 +113,7 @@ def main():
 
         out_path = args.outdir / f"manager_timings_{model}.png"
         fig.tight_layout()
-        fig.savefig(out_path, dpi=150)
+        fig.savefig(out_path, dpi=300)
         plt.close(fig)
 
     # Overall average patch_time across all models per node
@@ -141,7 +141,7 @@ def main():
 
     out_path_overall = args.outdir / "manager_timings_patch_overall.png"
     fig.tight_layout()
-    fig.savefig(out_path_overall, dpi=150)
+    fig.savefig(out_path_overall, dpi=300)
     plt.close(fig)
 
     # Comparison plot: total_time per model vs nodes on one figure
@@ -165,7 +165,7 @@ def main():
     ax.legend(title="Model", frameon=False, ncol=1)
     out_total_by_model = args.outdir / "manager_timings_total_by_model.png"
     fig.tight_layout()
-    fig.savefig(out_total_by_model, dpi=150)
+    fig.savefig(out_total_by_model, dpi=300)
     plt.close(fig)
 
     fig_log, ax_log = plt.subplots(figsize=(9, 5))
@@ -188,7 +188,7 @@ def main():
     ax_log.legend(title="Model", frameon=False, ncol=1)
     out_total_log = args.outdir / "manager_timings_total_by_model_log.png"
     fig_log.tight_layout()
-    fig_log.savefig(out_total_log, dpi=150)
+    fig_log.savefig(out_total_log, dpi=300)
     plt.close(fig_log)
 
     # Bar chart: average base_time per model (averaged over node means)
@@ -207,7 +207,7 @@ def main():
         ax.text(idx, v, f"{v:.2f}", ha="center", va="bottom", fontsize=8)
     fig.tight_layout()
     out_base_bar = args.outdir / "manager_base_time_by_model.png"
-    fig.savefig(out_base_bar, dpi=150)
+    fig.savefig(out_base_bar, dpi=300)
     plt.close(fig)
 
     print(

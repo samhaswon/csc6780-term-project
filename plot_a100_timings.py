@@ -48,7 +48,7 @@ def plot_timing_results(csv_path: str):
     plt.tight_layout()
 
     # Show plot
-    plt.savefig("./plots/a100_timings.png")
+    plt.savefig("./plots/a100_timings.png", dpi=300)
     print("Displaying plot...")
     plt.show()
 

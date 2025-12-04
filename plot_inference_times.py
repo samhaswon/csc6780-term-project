@@ -14,7 +14,7 @@ models = {
 resolutions = [256, 320, 512, 1024, 1280, 1728, 2048]
 
 plt.figure(figsize=(10, 6))
-
+plt.style.use('ggplot')
 for name, times in models.items():
     plt.plot(resolutions, times, marker='o', label=name)
 
@@ -25,5 +25,5 @@ plt.legend()
 plt.grid(True)
 
 plt.tight_layout()
-plt.savefig("plots/inference_times.png")
+plt.savefig("plots/inference_times.png", dpi=300)
 plt.show()
