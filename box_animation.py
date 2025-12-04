@@ -11,7 +11,7 @@ from typing import Dict, List, Optional, Sequence, Tuple
 import cv2
 import numpy as np
 from PIL import Image
-
+# pylint: disable=import-error,no-member
 from box_demo import colorize_magenta, draw_boxes
 from sessions import BiRefNetSession
 from tile_proc.tiles import (
@@ -42,6 +42,7 @@ HIGHLIGHT_COLOR: Color = (255, 255, 255)
 MAX_SIDE_PX = 2000
 
 
+# pylint: disable=too-many-instance-attributes
 @dataclass
 class BoxTrace:
     """
@@ -57,6 +58,7 @@ class BoxTrace:
     stage: Optional[str] = None  # e.g., "edge_primary", "pos_leftover"
 
 
+# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals,too-many-branches,too-many-statements
 def trace_tile_selection(
     mask_gray: np.ndarray,
     tile_size: int = TILE_SIZE,
@@ -370,7 +372,12 @@ def build_animation_frames(
     ordered_boxes = [trace.box for trace in traces]
     state_map: Dict[Box, str] = {box: "pending" for box in ordered_boxes}
 
-    intro_frame = render_boxes(mask_bgr, ordered_boxes, state_map, text_lines=["All candidate tiles"])
+    intro_frame = render_boxes(
+        mask_bgr,
+        ordered_boxes,
+        state_map,
+        text_lines=["All candidate tiles"]
+    )
     hold(intro_frame, scaled_count(fps // 3))
 
     for trace in traces:
@@ -394,14 +401,21 @@ def build_animation_frames(
         )
         hold(settled, scaled_count(max(2, fps // 10)))
 
-    final_state = render_boxes(mask_bgr, ordered_boxes, state_map, text_lines=["Final tile selection"])
+    final_state = render_boxes(
+        mask_bgr,
+        ordered_boxes,
+        state_map,
+        text_lines=["Final tile selection"]
+    )
     hold(final_state, scaled_count(fps // 2))
 
-    boxed_image = draw_boxes(image_bgr, final_boxes, box_line_thickness=4)
+    boxed_image = draw_boxes(image_bgr, final_boxes, box_line_thickness=16)
     for frame in fade_frames(final_state, boxed_image, scaled_count(fps)):
         append_frame(frame)
     hold(boxed_image, scaled_count(fps // 2))
 
+    if frames:
+        frames.insert(0, frames[-1].copy())
     return frames
 
 
@@ -435,13 +449,44 @@ def load_mask(image_path: Path, model_path: Path) -> Tuple[np.ndarray, np.ndarra
 
 
 def main() -> None:
+    """Main"""
     parser = argparse.ArgumentParser(description="Create a grid-box selection animation.")
-    parser.add_argument("--image", type=Path, default=Path("test_inputs/test.jpg"), help="Input image path.")
-    parser.add_argument("--model", type=Path, default=Path("models/birefnet.onnx"), help="BiRefNet ONNX model path.")
-    parser.add_argument("--output", type=Path, default=Path("plots/box_animation.mp4"), help="Output MP4 path.")
-    parser.add_argument("--fps", type=int, default=30, help="Output frame rate.")
-    parser.add_argument("--max-side", type=int, default=MAX_SIDE_PX, help="Clamp frames so the longest edge <= this value.")
-    parser.add_argument("--speed-factor", type=float, default=1.0, help=">1 speeds up (fewer frames), <1 slows down.")
+    parser.add_argument(
+        "--image",
+        type=Path,
+        default=Path("test_inputs/test.jpg"),
+        help="Input image path."
+    )
+    parser.add_argument(
+        "--model",
+        type=Path,
+        default=Path("models/birefnet.onnx"),
+        help="BiRefNet ONNX model path."
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=Path("plots/box_animation.mp4"),
+        help="Output MP4 path."
+    )
+    parser.add_argument(
+        "--fps",
+        type=int,
+        default=30,
+        help="Output frame rate."
+    )
+    parser.add_argument(
+        "--max-side",
+        type=int,
+        default=MAX_SIDE_PX,
+        help="Clamp frames so the longest edge <= this value."
+    )
+    parser.add_argument(
+        "--speed-factor",
+        type=float,
+        default=1.0,
+        help=">1 speeds up (fewer frames), <1 slows down."
+    )
     args = parser.parse_args()
 
     image_bgr, mask = load_mask(args.image, args.model)
