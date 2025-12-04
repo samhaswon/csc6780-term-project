@@ -39,6 +39,7 @@ PENDING_COLOR: Color = (0, 255, 255)   # Yellow
 REJECTED_COLOR: Color = (0, 0, 255)    # Red
 SELECTED_COLOR: Color = (0, 200, 0)    # Green
 HIGHLIGHT_COLOR: Color = (255, 255, 255)
+MAX_SIDE_PX = 2000
 
 
 @dataclass
@@ -277,10 +278,10 @@ def render_boxes(
         elif state_map.get(box) == "rejected":
             color = REJECTED_COLOR
         x0, y0, x1, y1 = box
-        cv2.rectangle(frame, (x0, y0), (x1 - 1, y1 - 1), color, 4)
+        cv2.rectangle(frame, (x0, y0), (x1 - 1, y1 - 1), color, 8)
     if highlight is not None:
         x0, y0, x1, y1 = highlight
-        cv2.rectangle(frame, (x0, y0), (x1 - 1, y1 - 1), HIGHLIGHT_COLOR, 8)
+        cv2.rectangle(frame, (x0, y0), (x1 - 1, y1 - 1), HIGHLIGHT_COLOR, 16)
     if text_lines:
         frame = draw_text_overlay(frame, text_lines)
     return frame
@@ -296,6 +297,20 @@ def fade_frames(start: np.ndarray, end: np.ndarray, steps: int) -> List[np.ndarr
         blended = cv2.addWeighted(start, 1.0 - alpha, end, alpha, 0)
         frames.append(blended)
     return frames
+
+
+def resize_to_max_side(image: np.ndarray, max_side: int = MAX_SIDE_PX) -> np.ndarray:
+    """
+    Resize image so its longest side is at most max_side while preserving aspect ratio.
+    """
+    h, w = image.shape[:2]
+    current_max = max(h, w)
+    if current_max <= max_side:
+        return image.copy()
+    ratio = max_side / float(current_max)
+    new_w = max(1, int(round(w * ratio)))
+    new_h = max(1, int(round(h * ratio)))
+    return cv2.resize(image, (new_w, new_h), interpolation=cv2.INTER_AREA)
 
 
 def describe_trace(trace: BoxTrace) -> List[str]:
@@ -320,20 +335,30 @@ def build_animation_frames(
     traces: Sequence[BoxTrace],
     final_boxes: Sequence[Box],
     fps: int,
+    max_side: int = MAX_SIDE_PX,
 ) -> List[np.ndarray]:
     """
     Build the complete set of frames for the requested animation.
     """
     frames: List[np.ndarray] = []
-    hold = lambda img, count: frames.extend([img.copy() for _ in range(count)])
+
+    def append_frame(img: np.ndarray) -> None:
+        resized = resize_to_max_side(img, max_side=max_side)
+        frames.append(resized)
+
+    def hold(img: np.ndarray, count: int) -> None:
+        for _ in range(max(0, count)):
+            append_frame(img)
 
     mask_bgr = cv2.cvtColor(mask_gray, cv2.COLOR_GRAY2BGR)
     colorized = colorize_magenta(image_bgr, mask_gray)
 
     hold(image_bgr, fps // 2)
-    frames.extend(fade_frames(image_bgr, colorized, fps))
+    for frame in fade_frames(image_bgr, colorized, fps):
+        append_frame(frame)
     hold(colorized, fps // 4)
-    frames.extend(fade_frames(colorized, mask_bgr, fps))
+    for frame in fade_frames(colorized, mask_bgr, fps):
+        append_frame(frame)
     hold(mask_bgr, fps // 4)
 
     ordered_boxes = [trace.box for trace in traces]
@@ -367,7 +392,8 @@ def build_animation_frames(
     hold(final_state, fps // 2)
 
     boxed_image = draw_boxes(image_bgr, final_boxes, box_line_thickness=4)
-    frames.extend(fade_frames(final_state, boxed_image, fps))
+    for frame in fade_frames(final_state, boxed_image, fps):
+        append_frame(frame)
     hold(boxed_image, fps // 2)
 
     return frames
@@ -404,10 +430,11 @@ def load_mask(image_path: Path, model_path: Path) -> Tuple[np.ndarray, np.ndarra
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Create a grid-box selection animation.")
-    parser.add_argument("--image", type=Path, default=Path("test_inputs/test3.jpg"), help="Input image path.")
+    parser.add_argument("--image", type=Path, default=Path("test_inputs/test.jpg"), help="Input image path.")
     parser.add_argument("--model", type=Path, default=Path("models/birefnet.onnx"), help="BiRefNet ONNX model path.")
     parser.add_argument("--output", type=Path, default=Path("plots/box_animation.mp4"), help="Output MP4 path.")
     parser.add_argument("--fps", type=int, default=30, help="Output frame rate.")
+    parser.add_argument("--max-side", type=int, default=MAX_SIDE_PX, help="Clamp frames so the longest edge <= this value.")
     args = parser.parse_args()
 
     image_bgr, mask = load_mask(args.image, args.model)
@@ -445,7 +472,14 @@ def main() -> None:
     if official_boxes != traced_boxes:
         raise RuntimeError("Trace results do not match select_tiles_edge_mixture output.")
 
-    frames = build_animation_frames(image_bgr, mask, traces, traced_boxes, fps=args.fps)
+    frames = build_animation_frames(
+        image_bgr,
+        mask,
+        traces,
+        traced_boxes,
+        fps=args.fps,
+        max_side=args.max_side,
+    )
     write_video(frames, args.output, args.fps)
     print(f"Wrote animation to {args.output}")
 
